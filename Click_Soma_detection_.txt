@@ -21,7 +21,8 @@ for(i=0;i<ImageList.length;i++){
         fileName = substring(ImageList[i], 0, lengthOf(ImageList[i]) - lengthOf(".tiff"));
 
         // Select neuron
-        repeatTimes = 1;
+        xmSave = newArray();
+        ymSave = newArray();
         do{
             // Wait user to select neurons
             waitForUser("Select neurons");
@@ -47,21 +48,38 @@ for(i=0;i<ImageList.length;i++){
             for(ii = 0; ii < resultNumber; ii++){
         
                 // Find Center of Mass
-                makeOval(x[ii]-15, y[ii]-15, 30, 30); // Make circle surounding soma (diameter is 1.2 times larger than soma)        
+                makeOval(x[ii]-15, y[ii]-15, 30, 30); // Make circle surounding soma (diameter is 1.2 times larger than soma)
+                run('Invert');
                 run("Measure");            
                 // Get the coordinate
                 xm[ii] = getResult("XM", ii);
                 ym[ii] = getResult("YM", ii);
             }
-            // Save the results table as exel file
-            saveAs("Results", dir + fileName + "xmym" + repeatTimes ".xls");
-            repeatTimes = repeatTimes + 1;
+        
+            // Add new coordinates to previous coordinates
+            tempXm = xmSave;
+            tempYm = ymSave;
+            xmSave = newArray(tempXm.length + resultNumber);
+            ymSave = newArray(tempYm.length + resultNumber);
+            for(ii = 0; ii < tempXm.length; ii++){
+                xmSave[ii] = tempXm[ii];
+                ymSave[ii] = tempYm[ii];
+            }
+            for(ii = tempXm.length; ii < xmSave.length; ii++){
+                xmSave[ii] = xm[ii - tempXm.length];
+                ymSave[ii] = ym[ii - tempYm.length];
+            }
+        
+            run("Clear Results");
+            close();
+            run("Open...", "path=" + dir + "\\" + ImageList[i]);
+            run("RGB Color"); // Change image type. 8bit color -> RGB color
             
             // plot the center of soma
-            for(ii = 0; ii < resultNumber; ii++){
+            for(ii = 0; ii < xmSave.length; ii++){
                            
                 // Select the center of soma
-                run("Specify...", "width=10 height=10 x=" + xm[ii] + " y=" + ym[ii] + " oval constrain centered");
+                run("Specify...", "width=10 height=10 x=" + xmSave[ii] + " y=" + ymSave[ii] + " oval constrain centered");
 
                 // Coloring the center of soma
                 run("Fill", "slice"); 
@@ -72,29 +90,14 @@ for(i=0;i<ImageList.length;i++){
             Dialog.addCheckbox("Yeah!!!", true);
             Dialog.show();
             flag = Dialog.getCheckbox();
-        } while(flag != 1);} while(flag);        
-
-        // close window
-        close();
-
-        // Reopen the image to mark the center of soma
-        run("Open...", "path=" + dir + "\\" + ImageList[i]);
-
-        // Change image type. 8bit color -> RGB color
-        run("RGB Color");
-
-
-        // Plot the center of soma
-        for(ii=0;ii<nResults;ii++){
-            x = getResult("X", ii);
-            y = getResult("Y", ii);
-
-            // Select the center of soma
-            run("Specify...", "width=10 height=10 x=" + x + " y=" + y + " oval constrain centered");
-
-            // Coloring the center of soma
-            run("Fill", "slice");
-        }
+        } while(flag != 1);
+    
+        // Save coordinates of detected neurons
+        for(ii = 0; ii < xmSave.length; ii++){
+            setResult("DetectedX", ii, xmSave[ii]);
+            setResult("DetectedY", ii, ymSave[ii]);
+        } 
+        saveAs("Results", dir + fileName + "DetectedLocation" + ".xls");
 
         // Restore the file type. RGB color -> 8bit color
         run("8-bit Color", "number=256");
