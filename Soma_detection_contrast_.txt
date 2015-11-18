@@ -1,0 +1,61 @@
+// Made by Yano
+// Detecting the center of soma
+
+// Select image directory
+dir = getDirectory("Choose an image directory");
+
+// Get image file list
+ImageList = getFileList(dir);
+
+for(i=0;i<ImageList.length;i++){
+
+// Open image
+// Check if image file or not
+if(indexOf(ImageList[i], ".tiff") != -1){
+run("Open...", "path=" + dir + "\\" + ImageList[i]);
+
+// Enhance contrast (default)
+run("Enhance Contrast...", "saturated=0.3");
+
+// Gaussian Blur (sigma = average size of soma)
+run("Gaussian Blur...", "sigma=12.5");
+
+// Find maxima. The maxima is expected to be the center of soma.
+run("Find Maxima...", "noise=10 output=List");
+
+// Get file name without extention
+fileName = substring(ImageList[i], 0, lengthOf(ImageList[i]) - lengthOf(".tiff"));
+
+// Save the results table as exel file
+saveAs("Results", dir + fileName + ".xls");
+
+// close window
+close();
+
+// Reopen the image to mark the center of soma
+run("Open...", "path=" + dir + "\\" + ImageList[i]);
+
+// Change image type. 8bit color -> RGB color
+run("RGB Color");
+
+
+// Plot the center of soma
+for(ii=0;ii<nResults;ii++){
+x = getResult("X", ii);
+y = getResult("Y", ii);
+
+// Select the center of soma
+run("Specify...", "width=10 height=10 x=" + x + " y=" + y + " oval constrain centered");
+
+// Coloring the center of soma
+run("Fill", "slice");
+}
+
+// Restore the file type. RGB color -> 8bit color
+run("8-bit Color", "number=256");
+
+// Save completed image and close
+run("Save");
+run("Close All");
+}
+}

@@ -1,0 +1,190 @@
+// Made by Yano
+// Combine images of immunostained neurons on the CMOS array
+// After conbine move image file from "raw_image_not_combined" to "raw_image_combined"
+// Make folder "raw_image_not_combined", "raw_image_combined", "combined_image" before use this macro
+// Put images in "raw_image_not_combined"
+// Make two types of combined images. One is colorful. The other is grayscale.
+// After images combined, images in "raw_image_not_combined" move into "raw_image_combined".
+
+
+// Select directory ...date + Chip + ChipNumber
+dir = getDirectory("Choose a Directory");
+
+// Write number of images to combine (default:3)
+combineImageNumber = getNumber("Input the number of images to combine",3);
+
+// Get image file list
+Filelist = getFileList(dir + "\\raw_image_not_combined");
+
+
+// comfirm the Filelist
+for(i=0;i<Filelist.length;i++){
+print(Filelist[i]);
+}
+
+for(i=0;i<(Filelist.length-1)/combineImageNumber;i++){
+
+// Open image to combine
+// Choose  files in a row and open them
+for(ii=0;ii<combineImageNumber;ii++){
+run("Open...", "path=" + dir + "\\raw_image_not_combined\\" + Filelist[i*combineImageNumber+ii]);
+run("8-bit");
+}
+
+// Combine images
+if(combineImageNumber==3){
+colorSetting = "c1="+Filelist[i*combineImageNumber+1]+" c3="+Filelist[i*combineImageNumber+2]+" c4="+Filelist[i*combineImageNumber]+" create";
+run("Merge Channels...", colorSetting);
+} else if(combineImageNumber==2){
+colorSetting = "c1="+Filelist[i*combineImageNumber+1]+" c4="+Filelist[i*combineImageNumber]+" create";
+run("Merge Channels...", colorSetting);
+}
+
+// Change contrast
+run("Enhance Contrast", "saturated=0.35");
+
+//////////////////////////////// File name -> the date when the file was made ///////////////////////////////////////////
+// Get file time
+File_time = File.dateLastModified(dir + "\\raw_image_not_combined\\" + Filelist[i*combineImageNumber+1]);
+
+// Get month
+month = MySubStr(File_time, 4, 7);
+
+// Get day
+day = MySubStr(File_time, 8, 10);
+
+// Get time
+time1 = MySubStr(File_time, 11, 13);
+time2 = MySubStr(File_time, 14, 16);
+time3 = MySubStr(File_time, 17, 19);
+
+// Get year
+year = MySubStr(File_time, 24, 28);
+
+File_time = year + month + day + time1 + time2 + time3;
+
+// Save and close
+// Save two types of images. One is colorful. The other is grayscale.
+selectWindow("Composite");
+saveAs("PNG", dir + "\\combined_colorful_image\\" + File_time +".png");
+run("Save", "save=" + dir + "\\combined_image\\" + File_time +".TIF");
+run("Close All");
+}
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// Move files from "raw_image_not_combined" to "raw_image_combined"
+for(i=0;i<Filelist.length;i++){
+File.rename(dir + "\\raw_image_not_combined\\" + Filelist[i], dir + "\\raw_image_combined\\" + Filelist[i])
+}
+
+//////////////// functions on the Web site http://hasezawa.ib.k.u-tokyo.ac.jp/zp/Kbi/ImageJMacroLibSeq ///////////////////////
+// 文字列 s から添字 i 番目の文字を得る: s[i]
+// 負の添字は末尾から -1 オリジンで数える。
+// MyCharAt("abcde", 2) => "c"
+// MyCharAt("abcde", -2) => "d"
+function MyCharAt(s, i) {
+    if (i < 0) {
+        i += lengthOf(s);
+    }
+    return fromCharCode(charCodeAt(s, i));
+}
+
+// 文字列から文字配列を得る: list(s)
+// MyStr2CharArr("abcde") => ["a", "b", "c", "d", "e"]
+function MyStr2CharArr(s) {
+    l = lengthOf(s);
+    a = newArray(l);
+    for (i = 0; i < l; i++) {
+        c = MyCharAt(s, i);
+        a[i] = c;
+    }
+    return a;
+}
+
+// 配列 arr から添字 start, stop で定められる部分配列を得る: 
+//  start <= stop の場合 arr[start:stop:1]
+//  それ以外             arr[start:stop:-1]
+// MySubArr([1, 2, 3, 4, 5], 2, 4) => [3, 4]
+// MySubArr([1, 2, 3, 4, 5], 4, 2) => [4, 3]
+// MySubArr([1, 2, 3, 4, 5], -1, 2) => [5, 4, 3]
+// arr[start:stop]
+function MySubArr(arr, start, stop) {
+    if (start < 0) {
+        start += arr.length;
+    }
+    if (stop < 0) {
+        stop += arr.length;
+    }
+    size = stop - start;
+    if (size == 0) {
+        return newArray(0);
+    } else if (size > 0) {
+        inc = 1;
+    } else {
+        start--;
+        inc = -1;
+    }
+    ret = newArray(abs(size));
+    for (i = 0, j = start; i < ret.length; i++, j += inc) {
+        ret[i] = arr[j];
+    }
+    return ret;
+}
+
+// 配列 tgtArr の左側(添字の小さい方)から、配列 delElemArr に含まれる要素と同じものを除外した配列を得る。
+// Python での文字列における lstrip() と同等。
+// MyLStripArr([1, 2, 3, 4, 5], [2, 1]) => [3, 4, 5]
+function MyLStripArr(tgtArr, delElemArr) {
+    for (i = 0; i < tgtArr.length; i++) {
+        s = tgtArr[i];
+        isFind = false;
+        for (j = 0; (j < delElemArr.length) && !isFind; j++) {
+            c = delElemArr[j];
+            // "[" + s + "][" + c + "]";
+            if (s == c) {
+                isFind = true;
+            }
+        }
+        if (isFind == false) {
+            ret = MySubArr(tgtArr, i, tgtArr.length);
+            return ret;
+        }
+    }
+    if (isFind == true) {
+        return newArray(0);
+    }
+    ret = MyDupArr(tgtArr)
+    return ret;
+}
+
+// 文字配列から文字列を得る: "".join(charArr)
+// MyCharArr2Str(["a", "b", "c", "d", "e"]) => "abcde"
+function MyCharArr2Str(charArr) {
+    ret = "";
+    for (i = 0; i < charArr.length; i++) {
+        ret = ret + charArr[i];
+    }
+    return ret;
+}
+
+// 文字列 str の左側から、文字列 chars に含まれる文字と同じものを除外した文字列を得る: str.lstrip(chars)
+// MyLStripStr("baabcdeffef", "ab") => "cdeffef"
+function MyLStripStr(str, chars) {
+    strArr = MyStr2CharArr(str);
+    charArr = MyStr2CharArr(chars);
+    a = MyLStripArr(strArr, charArr);
+    ret = MyCharArr2Str(a);
+    return ret;
+}
+
+// 文字列 s の添字 start, stop の範囲の副文字列を得る
+// start <= stop の場合: s[start:stop:1]
+// それ以外:             s[start:stop:-1]
+// MySubStr("12345", 2, 4) => "34"
+// MySubStr("12345", 4, 2) => "43"
+function MySubStr(s, start, stop) {
+    a = MyStr2CharArr(s);
+    a = MySubArr(a, start, stop);
+    ret = MyCharArr2Str(a);
+    return ret;
+}

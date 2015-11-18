@@ -1,0 +1,22 @@
+dir = getDirectory("Choose a Directory");
+folderlist0 = getFileList(dir);
+for(m=0;m<folderlist0.length;m++){
+FolderName0 = folderlist0[m];
+folderlist = getFileList(dir + FolderName0);
+count = 0;
+for(i=0;i<folderlist.length;i++){
+FolderName = folderlist[i];
+list = getFileList(dir + FolderName0 + FolderName);
+run("Image Sequence...", "open="+ dir + FolderName0 + FolderName + list[0]);
+run("EDF Easy ","quality='0' topology='1' show-topology='off' show-view='off'");
+n=nImages;
+while (n < 2){
+wait(500);
+n = nImages;
+}
+selectWindow("Output");
+count = count + 1;
+run("Save", "save=" + dir + FolderName0 + count +".TIF");
+run("Close All");
+}
+}

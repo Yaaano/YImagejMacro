@@ -1,0 +1,60 @@
+// Made by Yano
+// Combine images of transfected neurons taken by ImageScanner made by mita
+
+// Select two image directory
+electrodeDir = getDirectory("Choose an electrode directory");
+transfectionDir = getDirectory("Choose a transfection directory");
+
+// Select a save directory
+saveDir = getDirectory("Choose a save directory");
+
+// Get filter name
+electrodeFilterName = getString("Write a electrode filter name", "electrode");
+transfectionFilterName = getString("Write a transfection filter name", "transfection");
+
+// Get image file list
+ElectrodeImageList = getFileList(electrodeDir);
+TransfectionImageList = getFileList(transfectionDir);
+
+for(i=0;i<TransfectionImageList.length;i++){
+
+// Transfection image file open
+if(indexOf(TransfectionImageList[i], ".tiff") != -1){
+run("Open...", "path=" + transfectionDir + "\\" + TransfectionImageList[i]);
+
+// Auto contrast adjustment
+run("Brightness/Contrast...");
+run("Enhance Contrast", "saturated=0.35");
+run("Close");
+
+// Select the electrode image file taken at the same place as the transfection image
+transfectionImageNumber = substring(TransfectionImageList[i], lengthOf(transfectionFilterName), lengthOf(transfectionFilterName) + 2);
+// Extract a number of transfeciton image file
+for(ii=0;ii<ElectrodeImageList.length;ii++){
+// Extract a number of
+electrodeImageNumber = substring(ElectrodeImageList[ii], lengthOf(electrodeFilterName), lengthOf(electrodeFilterName) + 2);
+
+// Compare two image file number
+if(transfectionImageNumber == electrodeImageNumber){
+
+// Open the same number of electrode image as transfection image
+run("Open...", "path=" + electrodeDir + "\\" + ElectrodeImageList[ii]);
+
+// Merge two images
+run("Merge Channels...", "c4=" + ElectrodeImageList[ii] + " c5=" + TransfectionImageList[i] + " create");
+// Make stack image into one image
+run("Stack to RGB");
+// Auto contrast adjust
+run("Brightness/Contrast...");
+run("Enhance Contrast", "saturated=0.35");
+run("Close");
+
+// Save merged image
+saveAs("PNG", saveDir + "\\" + transfectionImageNumber + ".png");
+run("Close All");
+
+break;
+}
+}
+}
+}

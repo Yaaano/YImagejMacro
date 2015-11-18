@@ -1,0 +1,131 @@
+// Made by Yano
+// Fail to detect the center of soma
+// Use soma_detection_contrast instead
+
+// Select image directory
+dir = getDirectory("Choose an image directory");
+
+// Get image file list
+ImageList = getFileList(dir);
+
+for(i=0;i<ImageList.length;i++){
+
+    // Open image
+    // Check if image file or not
+    if(indexOf(ImageList[i], ".tiff") != -1){
+        run("Open...", "path=" + dir + "\\" + ImageList[i]);
+
+        // Enhance contrast (default)
+        run("Enhance Contrast...", "saturated=0.3");
+
+        // Gaussian Blur (sigma = average size of soma)
+        run("Gaussian Blur...", "sigma=12.5");
+
+        // Find maxima. The maxima is expected to be near the center of soma.
+        run("Find Maxima...", "noise=10 output=List");
+
+        // Get file name without extention
+        fileName = substring(ImageList[i], 0, lengthOf(ImageList[i]) - lengthOf(".tiff"));
+
+        // Save the results table as exel file
+        saveAs("Results", dir + fileName + ".xls");
+
+        // Load results coordinates
+        x = newArray(nResults);
+        y = newArray(nResults);
+        for(ii = 0; ii < nResults; ii++){
+            x[ii] = getResult("X", ii);
+            y[ii] = getResult("Y", ii);
+        }
+
+        // close image and result windows
+        resultNumber = nResults; // Memorize the number of results
+        run("Close All");
+
+        // Reopen the image to detect the center of soma
+        run("Open...", "path=" + dir + "\\" + ImageList[i]);
+
+        // Change image type. 8bit color -> RGB color
+        run("RGB Color");
+    
+        // Invet image
+        run("Invert");
+
+        // Detect the center of soma(Center of Mass)
+        xm = newArray(nResults);
+        ym = newArray(nResults);
+        for(ii = 0; ii < resultNumber; ii++){
+            
+            // Find Center of Mass
+            makeOval(x[ii]-15, y[ii]-15, 30, 30); // Make circle surounding soma (diameter is 1.2 times larger than soma)
+            run("Measure");            
+            // Get the coordinate
+            xm[ii] = getResult("XM", ii);
+            ym[ii] = getResult("YM", ii);
+        }
+        run("Clear Results");
+    
+        // Close inveted image
+        run("Close");
+    
+        // Reopen the image to detect the center of soma
+        run("Open...", "path=" + dir + "\\" + ImageList[i]);
+    
+        // Change image type. 8bit color -> RGB color
+        run("RGB Color");
+
+        // Mark detected the center of soma and check if the detection was succeeded
+        flag = newArray(resultNumber);
+        for(ii = 0; ii < resultNumber; ii++){
+            
+            // Select the center of soma
+            run("Specify...", "width=10 height=10 x=" + xm[ii] + " y=" + ym[ii] + " oval constrain centered");
+        
+            // Check if the center of soma is correctly detected
+            Dialog.create("Succeed?");
+            Dialog.addCheckbox("Yes", false);
+            Dialog.show();
+            flag[ii] = Dialog.getCheckbox();
+            
+            // Coloring the center of soma
+            run("Fill", "slice");
+        }
+    
+        run("Close");
+    
+        // Reopen the image to detect the center of soma
+        run("Open...", "path=" + dir + "\\" + ImageList[i]);
+    
+        // Change image type. 8bit color -> RGB color
+        run("RGB Color");
+    
+        // Mark correctly detected the center of somas
+        for(ii = 0; ii < resultNumber; ii++){
+            if(flag[ii] == 1){
+                // Select the center of soma
+                run("Specify...", "width=10 height=10 x=" + xm[ii] + " y=" + ym[ii] + " oval constrain centered");
+
+                // Coloring the center of soma
+                run("Fill", "slice");
+            }       
+        }
+    
+        // Save coordinates detected correctlly
+        index = 0;
+        for(ii = 0; ii < resultNumber; ii++){
+            if(flag[ii] == 1){
+                setResult("X", index, xm[ii]);
+                setResult("Y", index, ym[ii]);
+                index = index + 1;
+            }
+        }
+        saveAs("Results", dir + fileName + "xmym" + ".xls");
+        
+        // Restore the file type. RGB color -> 8bit color
+        run("8-bit Color", "number=256");
+
+        // Save completed image and close
+        run("Save");
+        run("Close All");
+    }
+}
