@@ -10,6 +10,9 @@ ImageList = getFileList(dir);
 // Set color to show the location of soma
 setForegroundColor(0, 0, 255); // Blue
 
+xmSave = newArray();
+ymSave = newArray();
+
 for(i=0;i<ImageList.length;i++){
 
     // Open image
@@ -19,13 +22,21 @@ for(i=0;i<ImageList.length;i++){
         
         // Change image type. 8bit color -> RGB color
         run("RGB Color");
+    
+        // plot the center of soma
+        for(ii = 0; ii < xmSave.length; ii++){
+                       
+            // Select the center of soma
+            run("Specify...", "width=10 height=10 x=" + xmSave[ii] + " y=" + ymSave[ii] + " oval constrain centered");
+
+            // Coloring the center of soma
+            run("Fill", "slice"); 
+        }
 
         // Get file name without extention
         fileName = substring(ImageList[i], 0, lengthOf(ImageList[i]) - lengthOf(".tiff"));
 
         // Select neuron
-        xmSave = newArray();
-        ymSave = newArray();
         do{
             // Wait user to select neurons
             waitForUser("Select neurons");
@@ -94,19 +105,20 @@ for(i=0;i<ImageList.length;i++){
             Dialog.show();
             flag = Dialog.getCheckbox();
         } while(flag != 1);
-    
-        // Save coordinates of detected neurons
-        for(ii = 0; ii < xmSave.length; ii++){
-            setResult("DetectedX", ii, xmSave[ii]);
-            setResult("DetectedY", ii, ymSave[ii]);
-        } 
-        saveAs("Results", dir + fileName + "DetectedLocation" + ".xls");
-
-        // Restore the file type. RGB color -> 8bit color
-        run("8-bit Color", "number=256");
-
-        // Save completed image and close
-        run("Save");
-        run("Close All");
     }
+    close();
 }
+
+// Save coordinates of detected neurons
+for(ii = 0; ii < xmSave.length; ii++){
+    setResult("DetectedX", ii, xmSave[ii]);
+    setResult("DetectedY", ii, ymSave[ii]);
+} 
+saveAs("Results", dir + fileName + "DetectedLocation" + ".xls");
+
+// Restore the file type. RGB color -> 8bit color
+run("8-bit Color", "number=256");
+
+// Save completed image and close
+run("Save");
+run("Close All");

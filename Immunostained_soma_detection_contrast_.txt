@@ -1,6 +1,6 @@
 // Made by Yano
-// Fail to detect the center of soma
-// Use soma_detection_contrast instead
+// Before using this plugin, you must select "Center of Mass" in "Set Measurements"
+// "Analyze" -> "Set Measurements" -> Check "Center of mass"
 
 // Select image directory
 dir = getDirectory("Choose an image directory");
@@ -77,15 +77,31 @@ for(i=0;i<ImageList.length;i++){
         // Mark detected the center of soma and check if the detection was succeeded
         flag = newArray(resultNumber);
         for(ii = 0; ii < resultNumber; ii++){
+            // Set color to show estimated location
+            setForegroundColor(0, 0, 255); // Blue
             
             // Select the center of soma
             run("Specify...", "width=10 height=10 x=" + xm[ii] + " y=" + ym[ii] + " oval constrain centered");
+            
+            // Coloring the center of soma
+            run("Fill", "slice");
         
             // Check if the center of soma is correctly detected
             Dialog.create("Succeed?");
             Dialog.addCheckbox("Yes", false);
             Dialog.show();
             flag[ii] = Dialog.getCheckbox();
+            
+            if (flag[ii] == 1){
+                // Set color to show suceed
+                setForegroundColor(0, 255, 0); // Green
+            } else {
+                // Set color to show fail
+                setForegroundColor(255, 255, 0); // Yellow
+            }
+            
+            // Select the center of soma
+            run("Specify...", "width=10 height=10 x=" + xm[ii] + " y=" + ym[ii] + " oval constrain centered");
             
             // Coloring the center of soma
             run("Fill", "slice");
@@ -100,6 +116,7 @@ for(i=0;i<ImageList.length;i++){
         run("RGB Color");
     
         // Mark correctly detected the center of somas
+        setForegroundColor(0, 0, 255); // Set color Blue
         for(ii = 0; ii < resultNumber; ii++){
             if(flag[ii] == 1){
                 // Select the center of soma
