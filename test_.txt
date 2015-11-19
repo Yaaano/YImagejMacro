@@ -1,0 +1,19 @@
+open("C:\\Users\\Ryuichi\\Desktop\\MAP2\\21\\MAP221_Focus09DetectedLocation.xls");
+
+x = newArray(nResults);
+y = newArray(nResults);
+
+                for(ii = 0; ii < nResults; ii++){
+                    x[ii] = getResult("DetectedX", ii);
+                    y[ii] = getResult("DetectedY", ii);
+                }
+        
+        // plot the center of soma
+            for(ii = 0; ii < x.length; ii++){
+                           
+                // Select the center of soma
+                run("Specify...", "width=10 height=10 x=" + x[ii] + " y=" + y[ii] + " oval constrain centered");
+
+                // Coloring the center of soma
+                run("Fill", "slice"); 
+            }

@@ -23,6 +23,11 @@ for(i=0;i<ImageList.length;i++){
         // Change image type. 8bit color -> RGB color
         run("RGB Color");
     
+        // Get xm of the image
+        run("Measure");
+        xmFirstMeasure = getResult("XM", 0);
+        run("Clear Results");
+            
         // plot the center of soma
         for(ii = 0; ii < xmSave.length; ii++){
                        
@@ -45,15 +50,20 @@ for(i=0;i<ImageList.length;i++){
             run("Measure");
         
             // Get coordinates of selected neurons
+            x = newArray();
+            y = newArray();
+            xmTmp = getResult("XM", 0);
+            if(xmFirstMeasure != xmTmp){
             x = newArray(nResults);
             y = newArray(nResults);
-            for(ii = 0; ii < nResults; ii++){
-                x[ii] = getResult("X", ii);
-                y[ii] = getResult("Y", ii);
+                for(ii = 0; ii < nResults; ii++){
+                    x[ii] = getResult("X", ii);
+                    y[ii] = getResult("Y", ii);
+                }
             }
             
             // Close a result window
-            resultNumber = nResults;
+            resultNumber = x.length;
             run("Clear Results");
             
             // Detect the center of soma(Center of Mass)
@@ -104,6 +114,7 @@ for(i=0;i<ImageList.length;i++){
             Dialog.addCheckbox("Yeah!!!", true);
             Dialog.show();
             flag = Dialog.getCheckbox();
+            
         } while(flag != 1);
     }
     close();
