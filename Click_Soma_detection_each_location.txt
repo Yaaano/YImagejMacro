@@ -22,11 +22,6 @@ for(i=0;i<ImageList.length;i++){
         
         // Change image type. 8bit color -> RGB color
         run("RGB Color");
-    
-        // Get xm of the image
-        run("Measure");
-        xmFirstMeasure = getResult("XM", 0);
-        run("Clear Results");
             
         // plot the center of soma
         for(ii = 0; ii < xmSave.length; ii++){
@@ -42,7 +37,13 @@ for(i=0;i<ImageList.length;i++){
         fileName = substring(ImageList[i], 0, lengthOf(ImageList[i]) - lengthOf(".tiff"));
 
         // Select neuron
-        do{
+        do{        
+        
+            // Get xm of the image
+            run("Measure");
+            xmFirstMeasure = getResult("XM", 0);
+            run("Clear Results");
+        
             // Wait user to select neurons
             waitForUser("Select neurons");
         
@@ -54,8 +55,8 @@ for(i=0;i<ImageList.length;i++){
             y = newArray();
             xmTmp = getResult("XM", 0);
             if(xmFirstMeasure != xmTmp){
-            x = newArray(nResults);
-            y = newArray(nResults);
+                x = newArray(nResults);
+                y = newArray(nResults);
                 for(ii = 0; ii < nResults; ii++){
                     x[ii] = getResult("X", ii);
                     y[ii] = getResult("Y", ii);
@@ -126,10 +127,3 @@ for(ii = 0; ii < xmSave.length; ii++){
     setResult("DetectedY", ii, ymSave[ii]);
 } 
 saveAs("Results", dir + fileName + "DetectedLocation" + ".xls");
-
-// Restore the file type. RGB color -> 8bit color
-run("8-bit Color", "number=256");
-
-// Save completed image and close
-run("Save");
-run("Close All");

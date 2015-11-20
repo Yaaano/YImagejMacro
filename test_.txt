@@ -1,5 +1,3 @@
-open("C:\\Users\\Ryuichi\\Desktop\\MAP2\\21\\MAP221_Focus09DetectedLocation.xls");
-
 x = newArray(nResults);
 y = newArray(nResults);
 
