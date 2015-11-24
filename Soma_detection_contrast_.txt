@@ -47,6 +47,9 @@ y = getResult("Y", ii);
 // Select the center of soma
 run("Specify...", "width=10 height=10 x=" + x + " y=" + y + " oval constrain centered");
 
+// Set color to show the location of soma
+setForegroundColor(0, 0, 255); // Blue
+
 // Coloring the center of soma
 run("Fill", "slice");
 }
